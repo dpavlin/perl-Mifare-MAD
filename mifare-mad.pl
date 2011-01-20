@@ -32,6 +32,29 @@ while(<DATA>) {
 	}
 }
 
+my $access_condition_data = {
+0b000 => 'R:AB W:AB I:AB DTR:AB',
+0b010 => 'R:AB W:-- I:-- DTR:--',
+0b100 => 'R:AB W:-B I:-- DTR:--', 
+0b110 => 'R:AB W:-B I:-B DTR:AB',
+0b001 => 'R:AB W:-- I:-- DTR:AB',
+0b011 => 'R:-B W:-B I:-- DTR:--',
+0b101 => 'R:-B W:-- I:-- DTR:--',
+0b111 => 'R:-- W:-- I:-- DTR:--',
+};
+
+my $access_condition_trailer = {
+0b000 => 'R/W: KEYSECXA:-/A ACCESS COND:A-/- KEYSECXB:A/A',
+0b010 => 'R/W: KEYSECXA:-/- ACCESS COND:A-/- KEYSECXB:A/-',
+0b100 => 'R/W: KEYSECXA:-/B ACCESS COND:AB/- KEYSECXB:-/B',
+0b110 => 'R/W: KEYSECXA:-/- ACCESS COND:AB/- KEYSECXB:-/-',
+0b001 => 'R/W: KEYSECXA:-/A ACCESS COND:A-/A KEYSECXB:A/A',
+0b011 => 'R/W: KEYSECXA:-/B ACCESS COND:AB/B KEYSECXB:-/B',
+0b101 => 'R/W: KEYSECXA:-/- ACCESS COND:AB/B KEYSECXB:-/-',
+0b111 => 'R/W: KEYSECXA:-/- ACCESS COND:AB/- KEYSECXB:-/-',
+};
+
+
 if ( $debug ) {
 	warn "# function_clusters ",dump($function_clusters);
 	warn "# mad_id ", dump($mad_id);
@@ -53,11 +76,34 @@ foreach my $i ( 0 .. 15 ) {
 		;
 
 	my $pos = 0x40 * $i;
+
+	my $c1 = ( ord(substr($card,$pos+0x37,1)) & 0xf0 ) >> 4;
+	my $c2 = ( ord(substr($card,$pos+0x38,1)) & 0x0f );
+	my $c3 = ( ord(substr($card,$pos+0x38,1)) & 0xf0 ) >> 4;
+
 	foreach my $j ( 0 .. 3 ) {
 		my $offset = $pos + $j * 0x10;
 		my $block = substr($card, $offset, 0x10);
-		printf "%04x %s\n", $offset, unpack('H*',$block);
+		my $mask = 1 << $j;
+		my $cond
+			= ( ( $c1 & $mask ) * 4 )
+			+ ( ( $c2 & $mask ) * 2 )
+			+ ( ( $c3 & $mask ) * 1 )
+			;
+		$cond >>= $j;
+
+		printf "%04x %s %03b %s\n", $offset, unpack('H*',$block)
+			, $cond
+			, $j < 3 ? $access_condition_data->{$cond} : $access_condition_trailer->{$cond}
+			;
 	}
+
+
+	printf "KEY A:%s | %s | B:%s\n"
+		,unpack('H*',substr($card,$pos+0x30   ,6))
+		,unpack('H*',substr($card,$pos+0x30+6 ,4))
+		,unpack('H*',substr($card,$pos+0x30+10,6))
+		;
 
 	if ( $v == 0x0004 ) {
 		# RLE encoded card holder information
