@@ -38,4 +38,10 @@ die "expected 4096 bytes, got ",length($card), " bytes\n"
 foreach my $i ( 0 .. 15 ) {
 	my $v = unpack('v',(substr($card, 0x10 + ( $i * 2 ), 2)));
 	printf "MAD sector %-2d %04x %s\n", $i, $v, $mad_id->{$v} || '?';
+
+	foreach my $j ( 0 .. 3 ) {
+		my $offset = 0x40 * $i + $j * 0x10;
+		my $block = substr($card, $offset, 0x10);
+		printf "%04x %s\n", $offset, unpack('H*',$block);
+	}
 }
