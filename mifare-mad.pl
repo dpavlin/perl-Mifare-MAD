@@ -44,4 +44,26 @@ foreach my $i ( 0 .. 15 ) {
 		my $block = substr($card, $offset, 0x10);
 		printf "%04x %s\n", $offset, unpack('H*',$block);
 	}
+
+	if ( $v == 0x0004 ) {
+		# RLE encoded card holder information
+		my $data = substr( $card, 0x40 * $i, 0x30);
+		my $o = 0;
+		my $types = {
+			0b00 => 'surname',
+			0b01 => 'given name',
+			0b10 => 'sex',
+			0b11 => 'any',
+		};
+		while ( substr($data,$o,1) ne "\x00" ) {
+			my $len = ord(substr($data,$o,1));
+			my $type = ( $len & 0b11000000 ) >> 6;
+			$len     =   $len & 0b00111111;
+			my $dump = substr($data,$o+1,$len-1);
+			$dump = '0x' . unpack('H*', $dump) if $type == 0b11; # any
+			printf "%-10s %2d %s\n", $types->{$type}, $len, $dump;
+			$o += $len + 1;
+		}
+	}
+
 }
