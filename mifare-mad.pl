@@ -194,11 +194,12 @@ E8    computer
 F0    mail
 F8-FF miscellaneous applications
 
-0000	sector free
-0001	sector defective
-0002	sector reserved
-0003	DIR continuted
-0004	card holder
+0000	sector is free
+0001	sector is defect, e.g. access keys are destroyed or unknown
+0002	sector is reserved
+0003	sector contains additional directory info (useful only for future cards)
+0004	sector contains card holder information in ASCII format.
+0005	sector not applicable (above memory size)
 
 0015 - card administration MIKROELEKTRONIKA spol.s.v.MIKROELEKTRONIKA spol.s.v.o. worldwide 1 01.02.2007 Card publisher info
 0016 - card administration Mikroelektronika spol.s.r.o., Kpt.Mikroelektronika spol.s.r.o., Kpt. PoEurope    1 10.10.2007 Issuer information
