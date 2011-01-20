@@ -52,15 +52,16 @@ foreach my $i ( 0 .. 15 ) {
 		, $mad_id->{$full_id} || "FIXME: add $full_id from MAD_overview.pdf to __DATA__ at end of $0"
 		;
 
+	my $pos = 0x40 * $i;
 	foreach my $j ( 0 .. 3 ) {
-		my $offset = 0x40 * $i + $j * 0x10;
+		my $offset = $pos + $j * 0x10;
 		my $block = substr($card, $offset, 0x10);
 		printf "%04x %s\n", $offset, unpack('H*',$block);
 	}
 
 	if ( $v == 0x0004 ) {
 		# RLE encoded card holder information
-		my $data = substr( $card, 0x40 * $i, 0x30);
+		my $data = substr( $card, $pos, 0x30);
 		my $o = 0;
 		my $types = {
 			0b00 => 'surname',
