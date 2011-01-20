@@ -67,15 +67,48 @@ die "expected 4096 bytes, got ",length($card), " bytes\n"
 	unless length $card == 4096;
 
 foreach my $i ( 0 .. 15 ) {
-	my $v = unpack('v',(substr($card, 0x10 + ( $i * 2 ), 2)));
-	my $cluster_id = unpack('HH', (( $v & 0xff00 ) >> 8) );
-	my $full_id = sprintf "%04x",$v;
-	printf "MAD sector %-2d %04x [%s]\n%s\n", $i, $v
-		, $function_clusters->{ $cluster_id }
-		, $mad_id->{$full_id} || "FIXME: add $full_id from MAD_overview.pdf to __DATA__ at end of $0"
-		;
 
 	my $pos = 0x40 * $i;
+
+	if ( $i == 0 ) {
+		printf "manufacturer block\nSerial number: %s\nCB: %s\nmanufacturer data: %s\n"
+			, unpack('H*',substr($card,0,4))
+			, unpack('H*',substr($card,4,1))
+			, unpack('H*',substr($card,5,11))
+			;
+	} else {
+		my $v = unpack('v',(substr($card, 0x10 + ( $i * 2 ), 2)));
+		my $cluster_id = unpack('HH', (( $v & 0xff00 ) >> 8) );
+		my $full_id = sprintf "%04x",$v;
+		printf "MAD sector %-2d %04x [%s]\n%s\n", $i, $v
+			, $function_clusters->{ $cluster_id }
+			, $mad_id->{$full_id} || "FIXME: add $full_id from MAD_overview.pdf to __DATA__ at end of $0"
+			;
+
+		if ( $v == 0x0004 ) {
+			# RLE encoded card holder information
+			my $data = substr( $card, $pos, 0x30);
+			my $o = 0;
+			my $types = {
+				0b00 => 'surname',
+				0b01 => 'given name',
+				0b10 => 'sex',
+				0b11 => 'any',
+			};
+			while ( substr($data,$o,1) ne "\x00" ) {
+				my $len = ord(substr($data,$o,1));
+				my $type = ( $len & 0b11000000 ) >> 6;
+				$len     =   $len & 0b00111111;
+				my $dump = substr($data,$o+1,$len-1);
+				$dump = '0x' . unpack('H*', $dump) if $type == 0b11; # any
+				printf "%-10s %2d %s\n", $types->{$type}, $len, $dump;
+				$o += $len + 1;
+			}
+		} elsif ( $v == 0x0015 ) {
+			printf "Card number: %s\n", unpack('h*',substr($card,$pos + 0x04,6));
+		}
+
+	}
 
 	my $c1 = ( ord(substr($card,$pos+0x37,1)) & 0xf0 ) >> 4;
 	my $c2 = ( ord(substr($card,$pos+0x38,1)) & 0x0f );
@@ -104,29 +137,6 @@ foreach my $i ( 0 .. 15 ) {
 		,unpack('H*',substr($card,$pos+0x30+6 ,4))
 		,unpack('H*',substr($card,$pos+0x30+10,6))
 		;
-
-	if ( $v == 0x0004 ) {
-		# RLE encoded card holder information
-		my $data = substr( $card, $pos, 0x30);
-		my $o = 0;
-		my $types = {
-			0b00 => 'surname',
-			0b01 => 'given name',
-			0b10 => 'sex',
-			0b11 => 'any',
-		};
-		while ( substr($data,$o,1) ne "\x00" ) {
-			my $len = ord(substr($data,$o,1));
-			my $type = ( $len & 0b11000000 ) >> 6;
-			$len     =   $len & 0b00111111;
-			my $dump = substr($data,$o+1,$len-1);
-			$dump = '0x' . unpack('H*', $dump) if $type == 0b11; # any
-			printf "%-10s %2d %s\n", $types->{$type}, $len, $dump;
-			$o += $len + 1;
-		}
-	} elsif ( $v == 0x0015 ) {
-		printf "Card number: %s\n", unpack('h*',substr($card,$pos + 0x04,6));
-	}
 
 	print "\n";
 
