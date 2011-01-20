@@ -78,6 +78,8 @@ foreach my $i ( 0 .. 15 ) {
 			printf "%-10s %2d %s\n", $types->{$type}, $len, $dump;
 			$o += $len + 1;
 		}
+	} elsif ( $v == 0x0015 ) {
+		printf "Card number: %s\n", unpack('h*',substr($card,$pos + 0x04,6));
 	}
 
 	print "\n";
