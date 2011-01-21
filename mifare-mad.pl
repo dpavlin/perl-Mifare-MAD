@@ -76,6 +76,11 @@ foreach my $i ( 0 .. 15 ) {
 			, unpack('H*',substr($card,4,1))
 			, unpack('H*',substr($card,5,11))
 			;
+		# General purpose byte (GPB)
+		my $gdp = ord(substr($card,$pos+0x39,1));
+		printf "ADV (MAD version code): %d\n", $gdp & 0b00000011;
+		printf "MA (multiapplication): %s\n",  $gdp & 0b01000000 ? 'yes' : 'monoaplication';
+		printf "DA (MAD available): %s\n",     $gdp & 0b10000000 ? 'yes' : 'no';
 	} else {
 		my $v = unpack('v',(substr($card, 0x10 + ( $i * 2 ), 2)));
 		my $cluster_id = unpack('HH', (( $v & 0xff00 ) >> 8) );
@@ -132,9 +137,10 @@ foreach my $i ( 0 .. 15 ) {
 	}
 
 
-	printf "KEY A:%s | %s | B:%s\n"
+	printf "KEY A:%s | %s GDP: %s | B:%s\n"
 		,unpack('H*',substr($card,$pos+0x30   ,6))
-		,unpack('H*',substr($card,$pos+0x30+6 ,4))
+		,unpack('H*',substr($card,$pos+0x30+6 ,3))
+		,unpack('H*',substr($card,$pos+0x30+9 ,1))
 		,unpack('H*',substr($card,$pos+0x30+10,6))
 		;
 
