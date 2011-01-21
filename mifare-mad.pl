@@ -77,15 +77,18 @@ foreach my $i ( 0 .. 15 ) {
 			, unpack('H*',substr($card,5,11))
 			;
 		# General purpose byte (GPB)
-		my $gdp = ord(substr($card,$pos+0x39,1));
+		my $gdp = ord(substr($card,0x39,1));
 		printf "ADV (MAD version code): %d\n", $gdp & 0b00000011;
 		printf "MA (multiapplication): %s\n",  $gdp & 0b01000000 ? 'yes' : 'monoaplication';
 		printf "DA (MAD available): %s\n",     $gdp & 0b10000000 ? 'yes' : 'no';
+
+		printf "Info byte (publisher sector): %x\n", ord(substr($card,0x11,1));
 	} else {
-		my $v = unpack('v',(substr($card, 0x10 + ( $i * 2 ), 2)));
+		my $mad_offset = 0x10 + ( $i * 2 );
+		my $v = unpack('v',(substr($card, $mad_offset, 2)));
 		my $cluster_id = unpack('HH', (( $v & 0xff00 ) >> 8) );
 		my $full_id = sprintf "%04x",$v;
-		printf "MAD sector %-2d %04x [%s]\n%s\n", $i, $v
+		printf "MAD sector %-2d@%x %04x [%s]\n%s\n", $i, $mad_offset, $v
 			, $function_clusters->{ $cluster_id }
 			, $mad_id->{$full_id} || "FIXME: add $full_id from MAD_overview.pdf to __DATA__ at end of $0"
 			;
