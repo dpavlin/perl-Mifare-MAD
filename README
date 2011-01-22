@@ -1,0 +1,7 @@
+pretty print Mifare Classic MAD - Mifare Application Directory from dump files
+
+Did you ever wondered what is stored on RFID card in your wallet?
+
+If this card is Mifare Classic, and you have supported reader which can run
+nfc-tools and can run Mifare Classic Offline Cracker you can now find out!
+
