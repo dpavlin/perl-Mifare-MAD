@@ -133,7 +133,10 @@ foreach my $i ( 0 .. 15 ) {
 			;
 		$cond >>= $j;
 
-		printf "%04x %s %03b %s\n", $offset, unpack('H*',$block)
+		my $hex = unpack('H*',$block);
+		$hex =~ s/(....)/$1 /g;
+
+		printf "%04x  %s %03b %s\n", $offset, $hex
 			, $cond
 			, $j < 3 ? $access_condition_data->{$cond} : $access_condition_trailer->{$cond}
 			;
