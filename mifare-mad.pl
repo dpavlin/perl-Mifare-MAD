@@ -90,7 +90,7 @@ foreach my $sector ( 0 .. 39 ) {
 		$ADV = $GBP & 0b00000011;
 		$MA  = $GBP & 0b01000000;
 		$DA  = $GBP & 0b10000000;
-		printf "ADV (MAD version code): %d %s\n", $ADV,
+		printf "ADV (MAD version code): %d %s\n", $ADV;
 		printf "MA (multiapplication): %s\n", $MA ? 'yes' : 'monoaplication';
 		printf "DA (MAD available): %s%s\n",  $DA ? 'yes' : 'no',
 			substr($card,$pos+0x30,6) eq "\xA0\xA1\xA2\xA3\xA4\xA5" ? ' public' : '';
@@ -138,7 +138,7 @@ foreach my $sector ( 0 .. 39 ) {
 	my $c2 = ( ord(substr($card,$trailer_pos+8,1)) & 0x0f );
 	my $c3 = ( ord(substr($card,$trailer_pos+8,1)) & 0xf0 ) >> 4;
 
-	printf "# trailer @%x c1:%d c2:%d c3:%d [%16b]\n"
+	printf "# trailer @%x c1:%d c2:%d c3:%d [%016b]\n"
 		, $trailer_pos, $c1, $c2, $c3
 		, unpack('n',(substr($card,$trailer_pos+7,2)))
 		;
