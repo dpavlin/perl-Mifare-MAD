@@ -45,7 +45,7 @@ my $access_condition_data = {
 
 my $access_condition_trailer = {
 0b000 => 'R/W: KEYA:-/A ACCESS:A-/- DATB:A/A ?',
-0b010 => 'R/W: KEYA:-/- ACCESS:A-/- DATB:A/- ?'.
+0b010 => 'R/W: KEYA:-/- ACCESS:A-/- DATB:A/- ?',
 0b100 => 'R/W: KEYA:-/B ACCESS:AB/- KEYB:-/B',
 0b110 => 'R/W: KEYA:-/- ACCESS:AB/- KEYB:-/-',
 0b001 => 'R/W: KEYA:-/A ACCESS:A-/A DATB:A/A ? transport conf',
@@ -96,7 +96,7 @@ foreach my $sector ( 0 .. 39 ) {
 		$ADV = $GBP & 0b00000011;
 		$MA  = $GBP & 0b01000000;
 		$DA  = $GBP & 0b10000000;
-		printf "ADV (MAD version code): %d %s\n", $ADV;
+		printf "ADV (MAD version code): %d\n", $ADV;
 		printf "MA (multiapplication): %s\n", $MA ? 'yes' : 'monoaplication';
 		printf "DA (MAD available): %s%s\n",  $DA ? 'yes' : 'no',
 			substr($card,$pos+0x30,6) eq "\xA0\xA1\xA2\xA3\xA4\xA5" ? ' public' : '';
@@ -144,21 +144,38 @@ foreach my $sector ( 0 .. 39 ) {
 	my $c2 = ( ord(substr($card,$trailer_pos+8,1)) & 0x0f );
 	my $c3 = ( ord(substr($card,$trailer_pos+8,1)) & 0xf0 ) >> 4;
 
-	printf "# trailer @%x c1:%d c2:%d c3:%d [%016b]\n"
-		, $trailer_pos, $c1, $c2, $c3
+	printf "# trailer @%x %016b c1:%08b c2:%08b c3:%08b\n"
 		, unpack('n',(substr($card,$trailer_pos+7,2)))
+		, $trailer_pos, $c1, $c2, $c3
 		;
 
+	my $cond = '';
 	foreach my $j ( 0 .. $blocks - 1 ) {
 		my $offset = $pos + $j * 0x10;
 		my $block = substr($card, $offset, 0x10);
-		my $mask = 1 << $j;
-		my $cond
-			= ( ( $c1 & $mask ) * 4 )
-			+ ( ( $c2 & $mask ) * 2 )
-			+ ( ( $c3 & $mask ) * 1 )
-			;
-		$cond >>= $j;
+
+		my $acl_block =
+			$sector < 32 ? $j :
+			$j % 5 == 0  ? $j / 5 :
+			undef; # display condition only once for block group
+
+		if ( defined $acl_block ) {
+			my $mask = 1 << $acl_block;
+			$cond
+				= ( ( $c1 & $mask ) * 4 )
+				+ ( ( $c2 & $mask ) * 2 )
+				+ ( ( $c3 & $mask ) * 1 )
+				;
+			$cond >>= $acl_block;
+			$cond = sprintf ' %03b %s'
+				, $cond
+				, $j == ( $blocks - 1 )
+					? $access_condition_trailer->{$cond}
+					: $access_condition_data->{$cond}
+				;
+		} else {
+			$cond = '';
+		}
 
 		my $hex = unpack('H*',$block);
 		$hex =~ s/(....)/$1 /g;
@@ -169,10 +186,7 @@ foreach my $sector ( 0 .. 39 ) {
 			$hex .= " | $hex_sw";
 		}
 
-		printf "%04x  %s %03b %s\n", $offset, $hex
-			, $cond
-			, $j < 3 ? $access_condition_data->{$cond} : $access_condition_trailer->{$cond}
-			;
+		printf "%x %03x  %s%s\n", $j, $offset, $hex, $cond;
 	}
 
 	printf "KEY A:%s | %s GDP: %s | B:%s %s\n"
