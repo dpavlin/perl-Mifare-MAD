@@ -74,6 +74,8 @@ foreach my $sector ( 0 .. 39 ) {
 
 	my $blocks = $sector < 32 ? 4 : 16;
 
+	next if substr($card,$pos,$blocks * 0x10) eq "\x00" x ($blocks * 0x10);
+
 	# General purpose byte (GPB)
 	my $GBP = ord(substr($card,0x39,1));
 
