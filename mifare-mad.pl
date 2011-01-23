@@ -71,6 +71,8 @@ my ( $ADV, $MA, $DA );
 foreach my $i ( 0 .. 15 ) {
 
 	my $pos = 0x40 * $i;
+	# General purpose byte (GPB)
+	my $GBP = ord(substr($card,0x39,1));
 
 	if ( $i == 0 ) {
 		printf "manufacturer block\nSerial number: %s\nCB: %s\nmanufacturer data: %s\n"
@@ -78,14 +80,15 @@ foreach my $i ( 0 .. 15 ) {
 			, unpack('H*',substr($card,4,1))
 			, unpack('H*',substr($card,5,11))
 			;
-		# General purpose byte (GPB)
-		my $gdp = ord(substr($card,0x39,1));
-		$ADV = $gdp & 0b00000011;
-		$MA  = $gdp & 0b01000000;
-		$DA  = $gdp & 0b10000000;
-		printf "ADV (MAD version code): %d\n", $ADV;
-		printf "MA (multiapplication): %s\n",  $MA ? 'yes' : 'monoaplication';
-		printf "DA (MAD available): %s\n",     $DA ? 'yes' : 'no';
+
+		# MAD
+		$ADV = $GBP & 0b00000011;
+		$MA  = $GBP & 0b01000000;
+		$DA  = $GBP & 0b10000000;
+		printf "ADV (MAD version code): %d %s\n", $ADV,
+		printf "MA (multiapplication): %s\n", $MA ? 'yes' : 'monoaplication';
+		printf "DA (MAD available): %s%s\n",  $DA ? 'yes' : 'no',
+			substr($card,$pos+0x30,6) eq "\xA0\xA1\xA2\xA3\xA4\xA5" ? ' public' : '';
 
 		printf "Info byte (publisher sector): %x\n", ord(substr($card,0x11,1));
 	} elsif ( $DA ) {
