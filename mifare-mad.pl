@@ -68,13 +68,16 @@ die "expected 4096 bytes, got ",length($card), " bytes\n"
 
 my ( $ADV, $MA, $DA );
 
-foreach my $i ( 0 .. 15 ) {
+my $pos = 0;
 
-	my $pos = 0x40 * $i;
+foreach my $sector ( 0 .. 39 ) {
+
+	my $blocks = $sector < 32 ? 4 : 16;
+
 	# General purpose byte (GPB)
 	my $GBP = ord(substr($card,0x39,1));
 
-	if ( $i == 0 ) {
+	if ( $sector == 0 ) {
 		printf "manufacturer block\nSerial number: %s\nCB: %s\nmanufacturer data: %s\n"
 			, unpack('H*',substr($card,0,4))
 			, unpack('H*',substr($card,4,1))
@@ -92,11 +95,11 @@ foreach my $i ( 0 .. 15 ) {
 
 		printf "Info byte (publisher sector): %x\n", ord(substr($card,0x11,1));
 	} elsif ( $DA ) {
-		my $mad_offset = 0x10 + ( $i * 2 );
+		my $mad_offset = 0x10 + ( $sector * 2 );
 		my $v = unpack('v',(substr($card, $mad_offset, 2)));
 		my $cluster_id = unpack('HH', (( $v & 0xff00 ) >> 8) );
 		my $full_id = sprintf "%04x",$v;
-		printf "MAD sector %-2d@%x %04x [%s]\n%s\n", $i, $mad_offset, $v
+		printf "MAD sector %-2d@%x %04x [%s]\n%s\n", $sector, $mad_offset, $v
 			, $function_clusters->{ $cluster_id }
 			, $mad_id->{$full_id} || "FIXME: add $full_id from MAD_overview.pdf to __DATA__ at end of $0"
 			;
@@ -125,14 +128,20 @@ foreach my $i ( 0 .. 15 ) {
 		}
 
 	} else {
-		printf "# sector %-2d\n", $i;
+		printf "# sector %-2d with %d blocks\n", $sector, $blocks;
 	}
 
-	my $c1 = ( ord(substr($card,$pos+0x37,1)) & 0xf0 ) >> 4;
-	my $c2 = ( ord(substr($card,$pos+0x38,1)) & 0x0f );
-	my $c3 = ( ord(substr($card,$pos+0x38,1)) & 0xf0 ) >> 4;
+	my $trailer_pos = $pos + $blocks * 0x10 - 0x10;
+	my $c1 = ( ord(substr($card,$trailer_pos+7,1)) & 0xf0 ) >> 4;
+	my $c2 = ( ord(substr($card,$trailer_pos+8,1)) & 0x0f );
+	my $c3 = ( ord(substr($card,$trailer_pos+8,1)) & 0xf0 ) >> 4;
 
-	foreach my $j ( 0 .. 3 ) {
+	printf "# trailer @%x c1:%d c2:%d c3:%d [%16b]\n"
+		, $trailer_pos, $c1, $c2, $c3
+		, unpack('n',(substr($card,$trailer_pos+7,2)))
+		;
+
+	foreach my $j ( 0 .. $blocks - 1 ) {
 		my $offset = $pos + $j * 0x10;
 		my $block = substr($card, $offset, 0x10);
 		my $mask = 1 << $j;
@@ -168,6 +177,7 @@ foreach my $i ( 0 .. 15 ) {
 
 	print "\n";
 
+	$pos += $blocks * 0x10;
 }
 
 __DATA__
