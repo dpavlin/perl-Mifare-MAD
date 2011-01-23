@@ -54,6 +54,12 @@ my $access_condition_trailer = {
 0b111 => 'R/W: KEYA:-/- ACCESS:AB/- KEYB:-/-',
 };
 
+my $life_cycle = {
+"\x78\x77\x88" => 'MAD INIT,RW',
+"\x7F\x07\x88" => 'NFC INIT,RW',
+"\x07\x8F\x0F" => 'READ ONLY',
+};
+
 
 if ( $debug ) {
 	warn "# function_clusters ",dump($function_clusters);
@@ -169,12 +175,12 @@ foreach my $sector ( 0 .. 39 ) {
 			;
 	}
 
-
-	printf "KEY A:%s | %s GDP: %s | B:%s\n"
+	printf "KEY A:%s | %s GDP: %s | B:%s %s\n"
 		,unpack('H*',substr($card,$trailer_pos   ,6))
 		,unpack('H*',substr($card,$trailer_pos+6 ,3))
 		,unpack('H*',substr($card,$trailer_pos+9 ,1))
 		,unpack('H*',substr($card,$trailer_pos+10,6))
+		,$life_cycle->{substr($card,$trailer_pos+6,3)} || ''
 		;
 
 	print "\n";
