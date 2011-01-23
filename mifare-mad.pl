@@ -157,7 +157,7 @@ foreach my $sector ( 0 .. 39 ) {
 		my $hex = unpack('H*',$block);
 		$hex =~ s/(....)/$1 /g;
 
-		if ( $ENV{SWAP} && $j < 3 ) {
+		if ( $ENV{SWAP} && $j < $blocks - 1 ) {
 			my $hex_sw = unpack('h*',$block);
 			$hex_sw =~ s/(....)/$1 /g;
 			$hex .= " | $hex_sw";
@@ -171,10 +171,10 @@ foreach my $sector ( 0 .. 39 ) {
 
 
 	printf "KEY A:%s | %s GDP: %s | B:%s\n"
-		,unpack('H*',substr($card,$pos+0x30   ,6))
-		,unpack('H*',substr($card,$pos+0x30+6 ,3))
-		,unpack('H*',substr($card,$pos+0x30+9 ,1))
-		,unpack('H*',substr($card,$pos+0x30+10,6))
+		,unpack('H*',substr($card,$trailer_pos   ,6))
+		,unpack('H*',substr($card,$trailer_pos+6 ,3))
+		,unpack('H*',substr($card,$trailer_pos+9 ,1))
+		,unpack('H*',substr($card,$trailer_pos+10,6))
 		;
 
 	print "\n";
