@@ -157,7 +157,7 @@ foreach my $sector ( 0 .. 39 ) {
 		my $hex = unpack('H*',$block);
 		$hex =~ s/(....)/$1 /g;
 
-		if ( $ENV{SWAP} && $j < $blocks - 1 ) {
+		if ( $ENV{SWAP} ) {
 			my $hex_sw = unpack('h*',$block);
 			$hex_sw =~ s/(....)/$1 /g;
 			$hex .= " | $hex_sw";
