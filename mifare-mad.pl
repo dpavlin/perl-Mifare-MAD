@@ -33,14 +33,14 @@ while(<DATA>) {
 }
 
 my $access_condition_data = {
-0b000 => 'R:AB W:AB I:AB DTR:AB',
-0b010 => 'R:AB W:-- I:-- DTR:--',
-0b100 => 'R:AB W:-B I:-- DTR:--', 
-0b110 => 'R:AB W:-B I:-B DTR:AB',
-0b001 => 'R:AB W:-- I:-- DTR:AB',
-0b011 => 'R:-B W:-B I:-- DTR:--',
-0b101 => 'R:-B W:-- I:-- DTR:--',
-0b111 => 'R:-- W:-- I:-- DTR:--',
+0b000 => 'R:AB W:AB I:AB DTR:AB transport conf',
+0b010 => 'R:AB W:-- I:-- DTR:-- r/w block',
+0b100 => 'R:AB W:-B I:-- DTR:-- r/w block', 
+0b110 => 'R:AB W:-B I:-B DTR:AB r/w block',
+0b001 => 'R:AB W:-- I:-- DTR:AB value block',
+0b011 => 'R:-B W:-B I:-- DTR:-- value block',
+0b101 => 'R:-B W:-- I:-- DTR:-- r/w block',
+0b111 => 'R:-- W:-- I:-- DTR:-- r/w block',
 };
 
 my $access_condition_trailer = {
@@ -48,7 +48,7 @@ my $access_condition_trailer = {
 0b010 => 'R/W: KEYA:-/- ACCESS:A-/- DATB:A/- ?'.
 0b100 => 'R/W: KEYA:-/B ACCESS:AB/- KEYB:-/B',
 0b110 => 'R/W: KEYA:-/- ACCESS:AB/- KEYB:-/-',
-0b001 => 'R/W: KEYA:-/A ACCESS:A-/A DATB:A/A ?',
+0b001 => 'R/W: KEYA:-/A ACCESS:A-/A DATB:A/A ? transport conf',
 0b011 => 'R/W: KEYA:-/B ACCESS:AB/B KEYB:-/B',
 0b101 => 'R/W: KEYA:-/- ACCESS:AB/B KEYB:-/-',
 0b111 => 'R/W: KEYA:-/- ACCESS:AB/- KEYB:-/-',
