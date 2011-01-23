@@ -66,6 +66,8 @@ my $card = <>;
 die "expected 4096 bytes, got ",length($card), " bytes\n"
 	unless length $card == 4096;
 
+my ( $ADV, $MA, $DA );
+
 foreach my $i ( 0 .. 15 ) {
 
 	my $pos = 0x40 * $i;
@@ -78,12 +80,15 @@ foreach my $i ( 0 .. 15 ) {
 			;
 		# General purpose byte (GPB)
 		my $gdp = ord(substr($card,0x39,1));
-		printf "ADV (MAD version code): %d\n", $gdp & 0b00000011;
-		printf "MA (multiapplication): %s\n",  $gdp & 0b01000000 ? 'yes' : 'monoaplication';
-		printf "DA (MAD available): %s\n",     $gdp & 0b10000000 ? 'yes' : 'no';
+		$ADV = $gdp & 0b00000011;
+		$MA  = $gdp & 0b01000000;
+		$DA  = $gdp & 0b10000000;
+		printf "ADV (MAD version code): %d\n", $ADV;
+		printf "MA (multiapplication): %s\n",  $MA ? 'yes' : 'monoaplication';
+		printf "DA (MAD available): %s\n",     $DA ? 'yes' : 'no';
 
 		printf "Info byte (publisher sector): %x\n", ord(substr($card,0x11,1));
-	} else {
+	} elsif ( $DA ) {
 		my $mad_offset = 0x10 + ( $i * 2 );
 		my $v = unpack('v',(substr($card, $mad_offset, 2)));
 		my $cluster_id = unpack('HH', (( $v & 0xff00 ) >> 8) );
@@ -116,6 +121,8 @@ foreach my $i ( 0 .. 15 ) {
 			printf "Card number: %s\n", unpack('h*',substr($card,$pos + 0x04,6));
 		}
 
+	} else {
+		printf "# sector %-2d\n", $i;
 	}
 
 	my $c1 = ( ord(substr($card,$pos+0x37,1)) & 0xf0 ) >> 4;
