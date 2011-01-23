@@ -136,6 +136,12 @@ foreach my $i ( 0 .. 15 ) {
 		my $hex = unpack('H*',$block);
 		$hex =~ s/(....)/$1 /g;
 
+		if ( $ENV{SWAP} && $j < 3 ) {
+			my $hex_sw = unpack('h*',$block);
+			$hex_sw =~ s/(....)/$1 /g;
+			$hex .= " | $hex_sw";
+		}
+
 		printf "%04x  %s %03b %s\n", $offset, $hex
 			, $cond
 			, $j < 3 ? $access_condition_data->{$cond} : $access_condition_trailer->{$cond}
