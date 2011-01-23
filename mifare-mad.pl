@@ -44,14 +44,14 @@ my $access_condition_data = {
 };
 
 my $access_condition_trailer = {
-0b000 => 'R/W: KEYSECXA:-/A ACCESS COND:A-/- KEYSECXB:A/A',
-0b010 => 'R/W: KEYSECXA:-/- ACCESS COND:A-/- KEYSECXB:A/-',
-0b100 => 'R/W: KEYSECXA:-/B ACCESS COND:AB/- KEYSECXB:-/B',
-0b110 => 'R/W: KEYSECXA:-/- ACCESS COND:AB/- KEYSECXB:-/-',
-0b001 => 'R/W: KEYSECXA:-/A ACCESS COND:A-/A KEYSECXB:A/A',
-0b011 => 'R/W: KEYSECXA:-/B ACCESS COND:AB/B KEYSECXB:-/B',
-0b101 => 'R/W: KEYSECXA:-/- ACCESS COND:AB/B KEYSECXB:-/-',
-0b111 => 'R/W: KEYSECXA:-/- ACCESS COND:AB/- KEYSECXB:-/-',
+0b000 => 'R/W: KEYA:-/A ACCESS:A-/- DATB:A/A ?',
+0b010 => 'R/W: KEYA:-/- ACCESS:A-/- DATB:A/- ?'.
+0b100 => 'R/W: KEYA:-/B ACCESS:AB/- KEYB:-/B',
+0b110 => 'R/W: KEYA:-/- ACCESS:AB/- KEYB:-/-',
+0b001 => 'R/W: KEYA:-/A ACCESS:A-/A DATB:A/A ?',
+0b011 => 'R/W: KEYA:-/B ACCESS:AB/B KEYB:-/B',
+0b101 => 'R/W: KEYA:-/- ACCESS:AB/B KEYB:-/-',
+0b111 => 'R/W: KEYA:-/- ACCESS:AB/- KEYB:-/-',
 };
 
 
