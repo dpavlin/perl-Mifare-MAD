@@ -12,7 +12,8 @@ fi
 
 mfoc -O $uid.mfd | tee $uid.log
 
-md5=`md5sum 32a0ee18.mfd | cut -d" " -f1`
-mv $uid.mfd $uid.$md5.mfd
-mv $uid.log $uid.$md5.log
+md5=`md5sum $uid.mfd | cut -d" " -f1 || `
+date=`date +%Y-%m-%dT%H%M%S`
+mv $uid.mfd $uid.$date.$md5.mfd
+mv $uid.log $uid.$date.$md5.log
 ls -al $uid.*
