@@ -9,9 +9,10 @@ use Digest::MD5 qw(md5_hex);
 
 use Data::Dump qw(dump);
 
+my $debug = $ENV{DEBUG} || 0;
 my $keyfile = shift @ARGV;
 
-my $r = RFID::Libnfc::Reader->new(debug => 1);
+my $r = RFID::Libnfc::Reader->new(debug => $debug);
 if ($r->init()) {
     printf ("Reader: %s\n", $r->name);
     my $tag = $r->connect(IM_ISO14443A_106);
@@ -78,6 +79,11 @@ if ($r->init()) {
 		warn "sector $i keys re-inserted at $o\n";
 	}
 
+	if ( my $padding = 4096 - length($card) ) {
+		warn "add $padding bytes up to 4k dump (needed for keys loading)\n";
+		$card .= "\x00" x $padding;
+	}
+
 	my $md5 = md5_hex($card);
 	if ( glob "cards/$uid.$md5.*" ) {
 		warn "SKIPPING, same dump allready exits\n";
@@ -89,7 +95,7 @@ if ($r->init()) {
 			symlink $out_file, "cards/$uid.key" || die "cards/$uid.key: $!";
 			warn "using keys as default for card $uid\n";
 		}
-		system "./mifare-mad.pl $out_file | vi -R -";
+		$ENV{MAD} && system "./mifare-mad.pl $out_file | vi -R -";
 	}
 
 }
