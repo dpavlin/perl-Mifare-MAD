@@ -49,6 +49,16 @@ if ($r->init()) {
             $i += 3 if ($tag->type eq "ULTRA");
 			$card .= $data;
 			print STDERR "$i ";
+		} elsif ( $tag->error =~ m/auth/ ) {
+			warn $tag->error,"\n";
+
+			# disconnect from reader so we can run mfoc
+			RFID::Libnfc::nfc_disconnect($r->{_pdi});
+
+			my $file = "cards/$uid.key";
+			unlink $file;
+			warn "# finding keys for card $uid with: mfoc -O $file\n";
+			exec "mfoc -O $file" || die $!;
         } else {
             die $tag->error."\n";
         }
@@ -69,10 +79,9 @@ if ($r->init()) {
 	}
 
 	my $md5 = md5_hex($card);
-	if ( glob "cards/$uid.md5.*" ) {
+	if ( glob "cards/$uid.$md5.*" ) {
 		warn "SKIPPING, same dump allready exits\n";
 	} else {
-
 		my $out_file = "cards/$uid.$md5";
 		write_file $out_file, $card;
 		print "$out_file ", -s $out_file, " bytes\n";
