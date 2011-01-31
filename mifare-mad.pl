@@ -69,8 +69,8 @@ if ( $debug ) {
 local $/ = undef;
 my $card = <>;
 
-die "expected 4096 bytes, got ",length($card), " bytes\n"
-	unless length $card == 4096;
+die "expected 4096 or 1024 bytes, got ",length($card), " bytes\n"
+	unless length $card == 4096 || length $card == 1024;
 
 my ( $ADV, $MA, $DA );
 
@@ -80,6 +80,7 @@ foreach my $sector ( 0 .. 39 ) {
 
 	my $blocks = $sector < 32 ? 4 : 16;
 
+	last if $pos >= length($card);
 	next if substr($card,$pos,$blocks * 0x10) eq "\x00" x ($blocks * 0x10);
 
 	# General purpose byte (GPB)
