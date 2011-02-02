@@ -97,8 +97,10 @@ if ($r->init()) {
 			symlink $out_file, $card_key_file || die "$card_key_file: $!";
 			warn "$card_key_file symlink created as default key for $uid\n";
 		}
-		$ENV{MAD} && system "./mifare-mad.pl $out_file | vi -R -";
 	}
+
+	# view dump
+	$ENV{MAD} && system "./mifare-mad.pl $out_file | vi -R -";
 
 }
 
