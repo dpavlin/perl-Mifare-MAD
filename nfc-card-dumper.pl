@@ -118,10 +118,12 @@ if ($r->init()) {
 			print STDERR "$block ";
 		}
 		print STDERR "done\n";
+	} else {
+		# view dump
+		my $txt_file = $out_file;
+		$txt_file =~ s/\.mfd/.txt/ || die "can't change extension to txt";
+		system "./mifare-mad.pl $out_file > $txt_file";
+		$ENV{MAD} && system "vi $txt_file";
 	}
-
-	# view dump
-	system "./mifare-mad.pl $out_file > $out_file.txt";
-	$ENV{MAD} && system "vi $out_file.txt";
 }
 
