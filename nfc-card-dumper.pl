@@ -6,8 +6,17 @@ use RFID::Libnfc::Reader;
 use RFID::Libnfc::Constants;
 use File::Slurp;
 use Digest::MD5 qw(md5_hex);
+use Getopt::Long::Descriptive;
 
 use Data::Dump qw(dump);
+
+my ($opt,$usage) = describe_options(
+	'%c %c [dump_with_keys]',
+	[ 'write=s',	'write dump to card' ],
+	[ 'debug|d',	'show debug dumps' ],
+	[ 'help|h',		'usage' ],
+);
+print $usage->text, exit if $opt->help;
 
 my $debug = $ENV{DEBUG} || 0;
 my $keyfile = shift @ARGV;
@@ -39,7 +48,7 @@ if ($r->init()) {
 
 	my $card;
 
-	print STDERR "$uid reading blocks ";
+	print STDERR "reading $uid blocks ";
     for (my $i = 0; $i < $tag->blocks; $i++) {
         if (my $data = $tag->read_block($i)) {
             # if we are dumping an ultralight token, 
@@ -98,6 +107,17 @@ if ($r->init()) {
 			symlink $out_file, $card_key_file || die "$card_key_file: $!";
 			warn "$card_key_file symlink created as default key for $uid\n";
 		}
+	}
+
+	if ( $opt->write ) {
+		my $card = read_file $opt->write;
+		print STDERR "writing $uid block ";
+		foreach my $block ( 0 .. $tag->blocks ) {
+			my $offset = 0x10 * $block;
+			$tag->write_block( $block, substr($card,$offset,0x10) );
+			print STDERR "$block ";
+		}
+		print STDERR "done\n";
 	}
 
 	# view dump
