@@ -96,7 +96,7 @@ if ($r->init()) {
 	}
 
 	my $md5 = md5_hex($card);
-	my $out_file = "cards/$uid.$md5";
+	my $out_file = "cards/$uid.$md5.mfd";
 	if ( -e $out_file ) {
 		warn "$out_file allready exists, not overwriting\n";
 	} else {
