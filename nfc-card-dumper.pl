@@ -100,7 +100,8 @@ if ($r->init()) {
 	}
 
 	# view dump
-	$ENV{MAD} && system "./mifare-mad.pl $out_file | vi -R -";
+	system "./mifare-mad.pl $out_file > $out_file.txt";
+	$ENV{MAD} && system "vi $out_file.txt";
 
 }
 
