@@ -2,8 +2,18 @@ pretty print Mifare Classic MAD - Mifare Application Directory from dump files
 
 Did you ever wondered what is stored on RFID card in your wallet?
 
+http://blog.rot13.org/2011/01/mifare_application_directory_-_what_is_stored_on_rfid_card_in_your_wallet.html
+
 If this card is Mifare Classic, and you have supported reader which can run
 nfc-tools and can run Mifare Classic Offline Cracker you can now find out!
+
+
+Following tools are included in this repository:
+
+	./mifare-mad.pl	cards/uid.md5	# dump MAD and card output
+
+	./nfc-card-dumper.pl			# read card on libnfc supported reader and save dump
+
 
 docs includes local copy of following documents:
 
