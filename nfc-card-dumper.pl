@@ -29,7 +29,8 @@ if ($r->init()) {
 
 	warn "UID: $uid\n";
 
-	$keyfile ||= "cards/$uid.key";
+	my $card_key_file = "cards/$uid.key";
+	$keyfile ||= $card_key_file;
 
 	if ( -e $keyfile ) {
 		warn "# loading keys from $keyfile";
@@ -41,7 +42,7 @@ if ($r->init()) {
 
 	my $card;
 
-	print STDERR "reading";
+	print STDERR "reading blocks ";
     for (my $i = 0; $i < $tag->blocks; $i++) {
         if (my $data = $tag->read_block($i)) {
             # if we are dumping an ultralight token, 
@@ -56,7 +57,7 @@ if ($r->init()) {
 			# disconnect from reader so we can run mfoc
 			RFID::Libnfc::nfc_disconnect($r->{_pdi});
 
-			my $file = "cards/$uid.key";
+			my $file = "cards/$uid.keys";
 			unlink $file;
 			warn "# finding keys for card $uid with: mfoc -O $file\n";
 			exec "mfoc -O $file" || die $!;
@@ -85,15 +86,16 @@ if ($r->init()) {
 	}
 
 	my $md5 = md5_hex($card);
-	if ( glob "cards/$uid.$md5.*" ) {
-		warn "SKIPPING, same dump allready exits\n";
+	my $out_file = "cards/$uid.$md5";
+	if ( -e $out_file ) {
+		warn "$out_file allready exists, SKIPING\n";
 	} else {
-		my $out_file = "cards/$uid.$md5";
 		write_file $out_file, $card;
-		print "$out_file ", -s $out_file, " bytes\n";
-		if ( ! -e "cards/$uid.key" ) {
-			symlink $out_file, "cards/$uid.key" || die "cards/$uid.key: $!";
-			warn "using keys as default for card $uid\n";
+		print "$out_file ", -s $out_file, " bytes key: $card_key_file\n";
+		if ( ! -e $card_key_file ) {
+			$out_file =~ s{^cards/}{} || die "can't strip directory from out_file";
+			symlink $out_file, $card_key_file || die "$card_key_file: $!";
+			warn "$card_key_file symlink created as default key for $uid\n";
 		}
 		$ENV{MAD} && system "./mifare-mad.pl $out_file | vi -R -";
 	}
