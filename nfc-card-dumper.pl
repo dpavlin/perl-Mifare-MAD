@@ -54,6 +54,10 @@ if ($r->init()) {
 			# disconnect from reader so we can run mfoc
 			RFID::Libnfc::nfc_disconnect($r->{_pdi});
 
+			print "Dump this card with mfoc? [y] ";
+			my $yes = <STDIN>; chomp $yes;
+			exit unless $yes =~ m/y/i || $yes eq '';
+
 			my $file = "cards/$uid.keys";
 			unlink $file;
 			warn "# finding keys for card $uid with: mfoc -O $file\n";
