@@ -19,7 +19,10 @@ my ($opt,$usage) = describe_options(
 print $usage->text, exit if $opt->help;
 
 my $debug = $ENV{DEBUG} || 0;
-my $keyfile = shift @ARGV;
+our $keyfile = shift @ARGV;
+our ( $tag, $uid, $card_key_file );
+
+sub write_card_dump;
 
 my $r = RFID::Libnfc::Reader->new(debug => $debug);
 if ($r->init()) {
@@ -33,9 +36,9 @@ if ($r->init()) {
         exit -1;
     }
 
-	my $uid = sprintf "%02x%02x%02x%02x", @{ $tag->uid };
+	$uid = sprintf "%02x%02x%02x%02x", @{ $tag->uid };
 
-	my $card_key_file = "cards/$uid.key";
+	$card_key_file = "cards/$uid.key";
 	$keyfile ||= $card_key_file;
 
 	if ( -e $keyfile ) {
@@ -67,7 +70,7 @@ if ($r->init()) {
 			my $yes = <STDIN>; chomp $yes;
 			exit unless $yes =~ m/y/i || $yes eq '';
 
-			my $file = "cards/$uid.keys";
+			my $file = "cards/$uid.key";
 			unlink $file;
 			warn "# finding keys for card $uid with: mfoc -O $file\n";
 			exec "mfoc -O $file" || die $!;
@@ -76,6 +79,31 @@ if ($r->init()) {
         }
     }
 	print STDERR "done\n";
+
+	my $out_file = write_card_dump $tag => $card;
+
+	if ( $opt->write ) {
+		read_file $opt->write;
+		print STDERR "writing $uid block ";
+		foreach my $block ( 0 .. $tag->blocks ) {
+			my $offset = 0x10 * $block;
+			$tag->write_block( $block, substr($card,$offset,0x10) );
+			print STDERR "$block ";
+		}
+		print STDERR "done\n";
+		unlink $card_key_file;
+		$out_file = write_card_dump $tag => $card;
+	} else {
+		# view dump
+		my $txt_file = $out_file;
+		$txt_file =~ s/\.mfd/.txt/ || die "can't change extension of $out_file to txt";
+		system "./mifare-mad.pl $out_file > $txt_file";
+		$ENV{MAD} && system "vi $txt_file";
+	}
+}
+
+sub write_card_dump {
+	my ( $tag, $card ) = @_;
 
 	# re-insert keys into dump
 	my $keys = $tag->{_keys} || die "can't find _keys";
@@ -102,28 +130,14 @@ if ($r->init()) {
 	} else {
 		write_file $out_file, $card;
 		warn "$out_file ", -s $out_file, " bytes key: $card_key_file\n";
-		if ( ! -e $card_key_file ) {
-			$out_file =~ s{^cards/}{} || die "can't strip directory from out_file";
-			symlink $out_file, $card_key_file || die "$card_key_file: $!";
-			warn "$card_key_file symlink created as default key for $uid\n";
-		}
 	}
 
-	if ( $opt->write ) {
-		my $card = read_file $opt->write;
-		print STDERR "writing $uid block ";
-		foreach my $block ( 0 .. $tag->blocks ) {
-			my $offset = 0x10 * $block;
-			$tag->write_block( $block, substr($card,$offset,0x10) );
-			print STDERR "$block ";
-		}
-		print STDERR "done\n";
-	} else {
-		# view dump
-		my $txt_file = $out_file;
-		$txt_file =~ s/\.mfd/.txt/ || die "can't change extension to txt";
-		system "./mifare-mad.pl $out_file > $txt_file";
-		$ENV{MAD} && system "vi $txt_file";
+	if ( ! -e $card_key_file ) {
+		my $source = $out_file;
+		$source =~ s{^cards/}{} || die "can't strip directory from out_file";
+		symlink $source, $card_key_file || die "$card_key_file: $!";
+		warn "$card_key_file symlink created as default key for $uid\n";
 	}
+
+	return $out_file;
 }
-
