@@ -13,6 +13,7 @@ use Data::Dump qw(dump);
 my ($opt,$usage) = describe_options(
 	'%c %c [dump_with_keys]',
 	[ 'write=s',	'write dump to card' ],
+	[ 'verify!',	'verify writes', { default => 1 } ],
 	[ 'debug|d',	'show debug dumps' ],
 	[ 'help|h',		'usage' ],
 );
@@ -84,14 +85,17 @@ if ($r->init()) {
 
 	if ( $opt->write ) {
 		read_file $opt->write;
-		print STDERR "writing $uid block ";
 		foreach my $block ( 0 .. $tag->blocks ) {
 			my $offset = 0x10 * $block;
 			my $data = substr($card,$offset,0x10);
+			print STDERR "writing $uid block $block";
 			$tag->write_block( $block, $data );
-			print STDERR "$block ";
-			my $verify = $tag->read_block( $block );
-			print STDERR $verify eq $data ? "OK " : "ERROR ";
+			if ( $opt->verify ) {
+				print STDERR " verify ";
+				my $verify = $tag->read_block( $block );
+				print STDERR $verify eq $data ? "OK" : "ERROR";
+			}
+			print STDERR "\n";
 		}
 		print STDERR "done\n";
 		unlink $card_key_file;
