@@ -87,8 +87,11 @@ if ($r->init()) {
 		print STDERR "writing $uid block ";
 		foreach my $block ( 0 .. $tag->blocks ) {
 			my $offset = 0x10 * $block;
-			$tag->write_block( $block, substr($card,$offset,0x10) );
+			my $data = substr($card,$offset,0x10);
+			$tag->write_block( $block, $data );
 			print STDERR "$block ";
+			my $verify = $tag->read_block( $block );
+			print STDERR $verify eq $data ? "OK " : "ERROR ";
 		}
 		print STDERR "done\n";
 		unlink $card_key_file;
