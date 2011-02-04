@@ -108,7 +108,7 @@ foreach my $sector ( 0 .. 39 ) {
 		my $v = unpack('v',(substr($card, $mad_offset, 2)));
 		my $cluster_id = unpack('HH', (( $v & 0xff00 ) >> 8) );
 		my $full_id = sprintf "%04x",$v;
-		printf "MAD sector %-2d@%x %04x [%s]\n%s\n", $sector, $mad_offset, $v
+		printf "# sector %-2d MAD@%x %04x [%s]\n%s\n", $sector, $mad_offset, $v
 			, $function_clusters->{ $cluster_id }
 			, $mad_id->{$full_id} || "FIXME: add $full_id from MAD_overview.pdf to __DATA__ at end of $0"
 			;
@@ -150,7 +150,7 @@ foreach my $sector ( 0 .. 39 ) {
 		, $trailer_pos, $c1, $c2, $c3
 		;
 
-	my $cond = '';
+	my $condition = '';
 	foreach my $j ( 0 .. $blocks - 1 ) {
 		my $offset = $pos + $j * 0x10;
 		my $block = substr($card, $offset, 0x10);
@@ -161,21 +161,29 @@ foreach my $sector ( 0 .. 39 ) {
 			undef; # display condition only once for block group
 
 		if ( defined $acl_block ) {
+			my $trailer = $j == ( $blocks - 1 );
 			my $mask = 1 << $acl_block;
-			$cond
+			my $cond
 				= ( ( $c1 & $mask ) * 4 )
 				+ ( ( $c2 & $mask ) * 2 )
 				+ ( ( $c3 & $mask ) * 1 )
 				;
 			$cond >>= $acl_block;
-			$cond = sprintf ' %03b %s'
+			$condition = sprintf ' %03b %s'
 				, $cond
-				, $j == ( $blocks - 1 )
-					? $access_condition_trailer->{$cond}
-					: $access_condition_data->{$cond}
+				, $trailer ? $access_condition_trailer->{$cond}
+				           : $access_condition_data->{$cond}
 				;
+			if ( ! $trailer && ( $cond == 0b001 || $cond == 0b011 ) ) {
+				my $value_block = unpack 'x4Lx8', $block;
+				my $positive = $value_block & 0x8000_0000;
+				my $value    = $value_block & 0x7fff_ffff;
+				$value = -$value if ! $positive;
+				#$condition .= sprintf " = %d 0x%x", $value, $value_block;
+				$condition .= " = " . $value;
+			}
 		} else {
-			$cond = '';
+			$condition = '';
 		}
 
 		my $hex = unpack('H*',$block);
@@ -187,7 +195,7 @@ foreach my $sector ( 0 .. 39 ) {
 			$hex .= " | $hex_sw";
 		}
 
-		printf "%x %03x  %s%s\n", $j, $offset, $hex, $cond;
+		printf "%x %03x  %s%s\n", $j, $offset, $hex, $condition;
 	}
 
 	printf "KEY A:%s | %s GDP: %s | B:%s %s\n"
