@@ -84,7 +84,7 @@ if ($r->init()) {
 	my $out_file = write_card_dump $tag => $card;
 
 	if ( $opt->write ) {
-		read_file $opt->write;
+		$card = read_file $opt->write;
 		foreach my $block ( 0 .. $tag->blocks ) {
 			my $offset = 0x10 * $block;
 			my $data = substr($card,$offset,0x10);
