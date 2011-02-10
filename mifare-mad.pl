@@ -175,12 +175,13 @@ foreach my $sector ( 0 .. 39 ) {
 				           : $access_condition_data->{$cond}
 				;
 			if ( ! $trailer && ( $cond == 0b001 || $cond == 0b011 ) ) {
-				my $value_block = unpack 'x4Lx8', $block;
-				my $positive = $value_block & 0x8000_0000;
-				my $value    = $value_block & 0x7fff_ffff;
-				$value = -$value if ! $positive;
+				my ( $value_block, $not ) = unpack 'llx8', $block;
+				my $value = $value_block;
+#				my $positive = $value_block & 0x8000_0000;
+#				my $value    = $value_block & 0x7fff_ffff;
+#				$value = -$value if ! $positive;
 				#$condition .= sprintf " = %d 0x%x", $value, $value_block;
-				$condition .= " = " . $value;
+				$condition .= sprintf " = %d 0x%x", $value_block, $not;
 			}
 		} else {
 			$condition = '';
