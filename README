@@ -7,6 +7,8 @@ http://blog.rot13.org/2011/01/mifare_application_directory_-_what_is_stored_on_r
 If this card is Mifare Classic, and you have supported reader which can run
 nfc-tools and can run Mifare Classic Offline Cracker you can now find out!
 
+This script does NOT crack your card, that Mifare Classic Offline Cracker job!
+
 
 Following tools are included in this repository:
 
