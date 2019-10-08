@@ -21,7 +21,7 @@ while(<DATA>) {
 	my $h = '[0-9A-F]';
 	if ( $code =~ m/^($h{2})-($h{2})$/ ) {
 		foreach my $c ( hex($1) .. hex($2) ) {
-			$function_clusters->{ unpack('HH',$c) } = $function;
+			$function_clusters->{ sprintf('%02x',$c) } = $function;
 		}
 	} elsif ( $code =~ m/^($h{2})$/ ) {
 		$function_clusters->{ lc $code } = $function;
@@ -106,7 +106,7 @@ foreach my $sector ( 0 .. 39 ) {
 	} elsif ( $DA ) {
 		my $mad_offset = 0x10 + ( $sector * 2 );
 		my $v = unpack('v',(substr($card, $mad_offset, 2)));
-		my $cluster_id = unpack('HH', (( $v & 0xff00 ) >> 8) );
+		my $cluster_id = sprintf('%02x', (( $v & 0xff00 ) >> 8) );
 		my $full_id = sprintf "%04x",$v;
 		printf "# sector %-2d MAD@%x %04x [%s]\n%s\n", $sector, $mad_offset, $v
 			, $function_clusters->{ $cluster_id }
@@ -288,6 +288,10 @@ F8-FF miscellaneous applications
 2061 - bus services Mikroelektronika spol.s r.o. Mikroelektronika spol.s r.o. Europe     1 01.08.2008 Electronic ticket
 2062 - bus services ZAGREBACKI Holding d.o.o. MIKROELEKTRONIKA spol.s.r.o EUROPE,Croatia 1 01.04.2009 Electronic tiicket
 2063 - bus services MIKROELEKTRONIKA spol.s.r. MIKROELEKTRONIKA spol.s.r.o. Europe       3 01.05.2009 electronic ticket
+
+4834 - access control & security	deister electronic GmbH	deister electronic GmbH	Europe	1	01.10.99	access control
+4835 - access control & security	deister electronic GmbH	deister electronic GmbH	Far East	1	01.10.99	access control
+4836 - access control & security	deister electronic GmbH	deister electronic GmbH	USA	1	01.10.99	access control
 
 887B - electronic purse ZAGREBACKI Holding d.o.o. MIKROELEKTRONIKA spol.s.r.o. EUROPE,Croatia  4 01.04.2009 Electronic purse
 887C - electronic purse MIKROELEKTRONIKA spol.s.r. MIKROELEKTRONIKA spol.s.r.o. Europe         4 01.05.2009 electronic purse
